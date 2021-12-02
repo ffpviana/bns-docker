@@ -1,0 +1,105 @@
+version: '3'
+services:
+
+  #PHP Service 7.4
+  php74:
+    build:
+      context: ./devops/php74
+      dockerfile: Dockerfile
+      args:
+        user: pc4
+        uid: 1000
+    container_name: deveee-php74-bns
+    restart: unless-stopped
+    tty: true
+    working_dir: /var/www
+    volumes:
+      - ../bns-3.0-loja:/var/www/bns-3.0-loja
+      - ./devops/php74/local.ini:/usr/local/etc/php/conf.d/local.ini
+    ports:
+      - "9000:9000"
+    depends_on:
+      - mongodb
+    networks:
+      - deveee
+
+  # #PHP Service 5.6
+  # php56:
+  #   build:
+  #     context: ./devops/php56
+  #   container_name: deveee-php56-bns
+  #   working_dir: /var/www
+  #   volumes:
+  #     - ../bns-2.0-vendas:/var/www/bns-2.0-vendas
+  #     - ../bns-2.0-deploy:/var/www/bns-2.0-deploy
+  #     - ./devops/php56/local.ini:/usr/local/etc/php/conf.d/local.ini
+  #   ports:
+  #     - "9000:9000"
+  #   depends_on:
+  #     - db
+  #   networks:
+  #     - deveee
+
+  #Nginx Service
+  webserver:
+    image: nginx:alpine
+    container_name: deveee-webserver-bns
+    restart: unless-stopped
+    tty: true
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ../bns-2.0-deploy:/var/www/bns-2.0-deploy
+      - ../bns-3.0-loja:/var/www/bns-3.0-loja
+      - ../bns-2.0-vendas:/var/www/bns-2.0-vendas
+      - ./devops/nginx/conf.d/:/etc/nginx/conf.d/
+    networks:
+      - deveee
+      
+  #MySQL Service
+  # db:
+  #   image: mysql:5.7.22
+  #   container_name: deveee-mysql57-bns
+  #   restart: unless-stopped
+  #   tty: true
+  #   ports:
+  #     - "3306:3306"
+  #   environment:
+  #     MYSQL_DATABASE: db_app
+  #     MYSQL_ROOT_PASSWORD: secret
+  #     SERVICE_TAGS: dev
+  #     SERVICE_NAME: mysql
+  #   volumes:
+  #     - dbdata:/var/lib/mysql/
+  #     - ./devops/mysql/my.cnf:/etc/mysql/my.cnf
+  #   networks:
+  #     - deveee
+  
+  #MongoDB
+  mongodb:
+    image: mongo:3.6.23
+    container_name: deveee-mongodb-bns
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: bns_eqpi_loja
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: root
+    volumes:
+      - mongodbdata:/data/db
+      - ./devops/mongodb/mongo-dump/:/usr/local/mongo-dump/
+    networks:
+      - deveee
+
+#Docker Networks
+networks:
+  deveee:
+    driver: bridge
+#Volumes
+volumes:
+  dbdata:
+    driver: local
+  mongodbdata:
+    driver: local
