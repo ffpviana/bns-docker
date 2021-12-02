@@ -53,7 +53,7 @@ services:
       - ../bns-2.0-deploy:/var/www/bns-2.0-deploy
       - ../bns-3.0-loja:/var/www/bns-3.0-loja
       - ../bns-2.0-vendas:/var/www/bns-2.0-vendas
-      - ./devops/nginx/conf.d/:/etc/nginx/conf.d/
+      - ./devops/nginx/conf.d:/etc/nginx/conf.d
     networks:
       - deveee
       
@@ -89,7 +89,23 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: root
     volumes:
       - mongodbdata:/data/db
-      - ./devops/mongodb/mongo-dump/:/usr/local/mongo-dump/
+      - ./devops/mongodb/mongo-dump:/usr/local/mongo-dump
+    networks:
+      - deveee
+  #Node
+  node:
+    image: node:12.10.0
+    container_name: node
+    environment:
+      TOOL_NODE_FLAGS: --max_old_space_size=2048
+    ports:
+      - "3000:3000"
+      - "3001:3001"
+    build:
+      context: ./devops/node
+      dockerfile: Dockerfile
+    volumes:
+      - ./:/var/www
     networks:
       - deveee
 
